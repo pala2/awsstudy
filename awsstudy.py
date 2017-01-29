@@ -5,10 +5,6 @@ import os
 import sys
 import getopt
 
-dbHost = 'examplecluster.c9jdxebmx23p.us-west-2.redshift.amazonaws.com'
-dbPort = '5439'
-dbName = 'dev'
-
 def main(argv):
 	try:
 		opts, args = getopt.getopt(argv,"hu:p:")
@@ -18,21 +14,21 @@ def main(argv):
 
 	for opt, arg in opts:
 	    if opt == '-h':
-			print 'awsstudy.py -u <username> -p <password>'
+			print 'awsstudy.py -p <password>'
 			os._exit(1)
-	    elif opt == '-u':
-	    	dbUser = arg
 	    elif opt == '-p':
 	    	dbPassword = arg
 
 	#Connect to Redshift
 	#Driver={Amazon Redshift (x64)}; Server=examplecluster.c9jdxebmx23p.us-west-2.redshift.amazonaws.com; Database=dev; UID=username; PWD=insert_your_master_user_password_here; Port=5439
 	try:
-		con=ps.connect(dbname= dbName, host=dbHost, port= dbPort, user= dbUser, password= dbPassword)
+		con=ps.connect(password= dbPassword)
 		print "Success getting connection!"
 		pp.pprint(con)
 	except ps.Error as e:
 		print "Connection Error:",e.pgerror
+		print "Code:",e.pgcode
+		print "Dagnostics:",e.diag
 		os._exit(1)
 
 	#Get cursor 
