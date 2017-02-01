@@ -4,6 +4,7 @@ import numpy as np
 import os
 import sys
 import getopt
+import re
 
 def main(argv):
 	try:
@@ -22,13 +23,19 @@ def main(argv):
 	#Connect to Redshift
 	#Driver={Amazon Redshift (x64)}; Server=examplecluster.c9jdxebmx23p.us-west-2.redshift.amazonaws.com; Database=dev; UID=username; PWD=insert_your_master_user_password_here; Port=5439
 	try:
-		con=ps.connect(password= dbPassword)
+		con=ps.connect(password= dbPassword, sslmode='require')
 		print "Success getting connection!"
 		pp.pprint(con)
 	except ps.Error as e:
+		print e
 		print "Connection Error:",e.pgerror
 		print "Code:",e.pgcode
 		print "Dagnostics:",e.diag
+		out = {}
+		for prop in dir(e.diag):
+			if not re.match(r'__', prop):
+				out[prop] = getattr(e.diag, prop)
+		pp.pprint(out)
 		os._exit(1)
 
 	#Get cursor 
@@ -42,8 +49,22 @@ def main(argv):
 
 	#query = "SELECT * FROM pg_table_def WHERE tablename = 'sales';"
 	cur.execute(queryListAllTables)
-	pp.pprint(cur.fetchall())
+	results = cur.fetchall()
 
+	for table in results:
+		pp.pprint(table)
+		tablename = table[1]
+	#pp.pprint(cur.fetchall())
+
+		queryShowColumnNames = ("SELECT column_name FROM information_schema.columns "
+			"WHERE table_schema = 'public' AND table_name = '" + tablename + "';")
+		cur.execute(queryShowColumnNames)
+	#cur.execute("SELECT * FROM account LIMIT 1")
+		pp.pprint(cur.fetchall())
+
+	#queryGetRowCount = ("SELECT COUNT(*) FROM account;")
+	#cur.execute(queryGetRowCount)
+	#pp.pprint(cur.fetchall())
 	#queryExample = ("SELECT firstname, lastname, total_quantity "
 	#		"FROM   (SELECT buyerid, sum(qtysold) total_quantity "
 	#        "FROM  sales "
